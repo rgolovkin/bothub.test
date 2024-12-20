@@ -1,10 +1,10 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable, UnauthorizedException
-} from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { GoogleAuthRequestDto, SignInRequestDto, SignUpRequestDto } from "./dtos/request.dto";
+import {
+  GoogleAuthRequestDto,
+  SignInRequestDto,
+  SignUpRequestDto,
+} from './dtos/request.dto';
 import { AuthResponseDto } from './dtos/response.dto';
 import { plainToInstance } from 'class-transformer';
 import { generateAccessToken, generateRefreshToken } from './utils/jwt.utils';
@@ -58,7 +58,11 @@ export class AuthService {
     }
 
     const savedUser = await this.prisma.user.create({
-      data: { email: data.email, avatar: data.avatar, password: await bcrypt.hash(data.password, 10) },
+      data: {
+        email: data.email,
+        avatar: data.avatar,
+        password: await bcrypt.hash(data.password, 10),
+      },
     });
 
     const accessToken = generateAccessToken({
@@ -83,14 +87,19 @@ export class AuthService {
   }
 
   async login(req: SignInRequestDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findFirst({ where: { email: req.email } });
+    const user = await this.prisma.user.findFirst({
+      where: { email: req.email },
+    });
     if (!user) {
       throw new HttpException('User does not exist', HttpStatus.NOT_FOUND);
     }
 
-    const comparePassword = await bcrypt.compare(req.password, user.password)
+    const comparePassword = await bcrypt.compare(req.password, user.password);
     if (!comparePassword) {
-      throw new HttpException('Access denied, incorrect password', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'Access denied, incorrect password',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     const accessToken = generateAccessToken({
