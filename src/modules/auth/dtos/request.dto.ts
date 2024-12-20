@@ -1,6 +1,6 @@
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
-export class SignInRequestDto {
+export class SignUpRequestDto {
   @IsNotEmpty()
   @IsString()
   avatar: string;
@@ -9,6 +9,21 @@ export class SignInRequestDto {
   @IsString()
   @IsEmail()
   email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+}
+
+export class SignInRequestDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 }
 
 export class GoogleAuthRequestDto {

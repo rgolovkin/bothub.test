@@ -1,72 +1,115 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { GoogleAuthRequestDto, SignInRequestDto } from "./dtos/request.dto";
-import { AuthResponseDto } from "./dtos/response.dto";
-import { plainToInstance } from "class-transformer";
-import { generateAccessToken, generateRefreshToken } from "./utils/jwt.utils";
-import { use } from "passport";
+import {
+  HttpException,
+  HttpStatus,
+  Injectable, UnauthorizedException
+} from "@nestjs/common";
+import { PrismaService } from '../prisma/prisma.service';
+import { GoogleAuthRequestDto, SignInRequestDto, SignUpRequestDto } from "./dtos/request.dto";
+import { AuthResponseDto } from './dtos/response.dto';
+import { plainToInstance } from 'class-transformer';
+import { generateAccessToken, generateRefreshToken } from './utils/jwt.utils';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async googleAuth(req: GoogleAuthRequestDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findFirst({ where: { email: req.email } });
-    if (user) {
-      return await this.login(user.id);
-    }
-
-    const savedUser = await this.prisma.user.create({ data: { email: req.email, avatar: req.name } });
-
-    const accessToken = generateAccessToken({ userId: savedUser.id, email: savedUser.email });
-    const refreshToken = generateRefreshToken({ userId: savedUser.id, email: savedUser.email });
-    const updateRefreshToken = await this.prisma.user.update({ where: { id: savedUser.id }, data: { refreshToken, updatedAt: new Date()
-      } });
-    const result = {
-      ...updateRefreshToken,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    }
-
-    return plainToInstance(AuthResponseDto, result);
-  }
-
-  async signIn(data: SignInRequestDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findFirst({ where: { email: data.email } });
-    if (user) {
-      return await this.login(user.id);
-    }
-
-    const savedUser = await this.prisma.user.create({ data: { email: data.email , avatar: data.avatar } });
-
-    const accessToken = generateAccessToken({ userId: savedUser.id, email: savedUser.email });
-    const refreshToken = generateRefreshToken({ userId: savedUser.id, email: savedUser.email });
-    const updateRefreshToken = await this.prisma.user.update({ where: { id: savedUser.id }, data: { refreshToken, updatedAt: new Date()
-    } });
-    const result = {
-      ...updateRefreshToken,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    }
-
-    return plainToInstance(AuthResponseDto, result);
-  }
-
-  async login(id: number) {
-    const user = await this.prisma.user.findFirst({ where: { id } });
+    const user = await this.prisma.user.findFirst({
+      where: { email: req.email },
+    });
     if (!user) {
-      throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
+      await this.prisma.user.create({
+        data: { email: req.email, avatar: req.name, password: null },
+      });
     }
 
-    const accessToken = generateAccessToken({ userId: user.id, email: user.email });
-    const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
-    const updateRefreshToken = await this.prisma.user.update({ where: { id: user.id }, data: { refreshToken, updatedAt: new Date()
-      } });
+    const savedUser = await this.prisma.user.findFirst({
+      where: { email: req.email },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: savedUser.id,
+      email: savedUser.email,
+    });
+    const refreshToken = generateRefreshToken({
+      userId: savedUser.id,
+      email: savedUser.email,
+    });
+    const updateRefreshToken = await this.prisma.user.update({
+      where: { id: savedUser.id },
+      data: { refreshToken, updatedAt: new Date() },
+    });
     const result = {
       ...updateRefreshToken,
       accessToken: accessToken,
       refreshToken: refreshToken,
+    };
+
+    return plainToInstance(AuthResponseDto, result);
+  }
+
+  async signUp(data: SignUpRequestDto): Promise<AuthResponseDto> {
+    const user = await this.prisma.user.findFirst({
+      where: { email: data.email },
+    });
+    if (user) {
+      throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
     }
+
+    const savedUser = await this.prisma.user.create({
+      data: { email: data.email, avatar: data.avatar, password: await bcrypt.hash(data.password, 10) },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: savedUser.id,
+      email: savedUser.email,
+    });
+    const refreshToken = generateRefreshToken({
+      userId: savedUser.id,
+      email: savedUser.email,
+    });
+    const updateRefreshToken = await this.prisma.user.update({
+      where: { id: savedUser.id },
+      data: { refreshToken, updatedAt: new Date() },
+    });
+    const result = {
+      ...updateRefreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+
+    return plainToInstance(AuthResponseDto, result);
+  }
+
+  async login(req: SignInRequestDto): Promise<AuthResponseDto> {
+    const user = await this.prisma.user.findFirst({ where: { email: req.email } });
+    if (!user) {
+      throw new HttpException('User does not exist', HttpStatus.NOT_FOUND);
+    }
+
+    const comparePassword = await bcrypt.compare(req.password, user.password)
+    if (!comparePassword) {
+      throw new HttpException('Access denied, incorrect password', HttpStatus.NOT_FOUND);
+    }
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      email: user.email,
+    });
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      email: user.email,
+    });
+    const updateRefreshToken = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken, updatedAt: new Date() },
+    });
+    const result = {
+      ...updateRefreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
 
     return plainToInstance(AuthResponseDto, result);
   }
