@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { SignInRequestDto, SignUpRequestDto } from './dtos/request.dto';
 import { AuthResponseDto } from './dtos/response.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { CombinedAuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -12,6 +13,12 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req) {
     return this.authService.googleAuth(req.user);
+  }
+
+  @Get('current-user')
+  @UseGuards(CombinedAuthGuard)
+  async getMe(@Req() req) {
+    return this.authService.getMe(req.user.email);
   }
 
   @Post('sign-up')

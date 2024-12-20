@@ -1,11 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   GoogleAuthRequestDto,
   SignInRequestDto,
   SignUpRequestDto,
 } from './dtos/request.dto';
-import { AuthResponseDto } from './dtos/response.dto';
+import { AuthResponseDto, GetMeResponseDto } from "./dtos/response.dto";
 import { plainToInstance } from 'class-transformer';
 import { generateAccessToken, generateRefreshToken } from './utils/jwt.utils';
 import * as bcrypt from 'bcrypt';
@@ -47,6 +52,15 @@ export class AuthService {
     };
 
     return plainToInstance(AuthResponseDto, result);
+  }
+
+  async getMe(email: string): Promise<GetMeResponseDto> {
+    const user = await this.prisma.user.findFirst({ where: { email } });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    return plainToInstance(GetMeResponseDto, user);
   }
 
   async signUp(data: SignUpRequestDto): Promise<AuthResponseDto> {

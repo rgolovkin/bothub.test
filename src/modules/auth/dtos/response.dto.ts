@@ -1,4 +1,4 @@
-import { Exclude, Expose } from "class-transformer";
+import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
 export class AuthResponseDto {
@@ -13,4 +13,13 @@ export class AuthResponseDto {
 
   @Expose()
   refreshToken: string;
+}
+
+@Exclude()
+export class GetMeResponseDto {
+  @Expose()
+  avatar: string;
+
+  @Expose()
+  email: string;
 }
