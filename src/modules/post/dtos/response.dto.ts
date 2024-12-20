@@ -2,31 +2,24 @@ import { Exclude, Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Exclude()
-export class AuthResponseDto {
+export class PostResponseDto {
   @ApiProperty()
   @Expose()
-  avatar: string;
+  title: string;
 
   @ApiProperty()
   @Expose()
-  email: string;
+  description: string;
 
   @ApiProperty()
   @Expose()
-  accessToken: string;
+  category: string;
 
   @ApiProperty()
   @Expose()
-  refreshToken: string;
-}
-
-@Exclude()
-export class GetMeResponseDto {
-  @ApiProperty()
-  @Expose()
-  avatar: string;
+  status: string;
 
   @ApiProperty()
   @Expose()
-  email: string;
+  upvote: number;
 }

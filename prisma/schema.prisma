@@ -15,4 +15,27 @@ model User {
   refreshToken String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now())
+  post         Post[]
+  upvote       Upvote[]
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  category    String
+  status      String
+  authorId    Int
+  user        User     @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  upvote      Upvote[]
+}
+
+model Upvote {
+  id     Int  @id @default(autoincrement())
+  postId Int
+  post   Post @relation(fields: [postId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }

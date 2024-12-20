@@ -107,7 +107,7 @@ export class AuthService {
     if (!comparePassword) {
       throw new HttpException(
         'Access denied, incorrect password',
-        HttpStatus.NOT_FOUND,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
