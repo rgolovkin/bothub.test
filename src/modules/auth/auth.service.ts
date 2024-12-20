@@ -1,16 +1,11 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   GoogleAuthRequestDto,
   SignInRequestDto,
   SignUpRequestDto,
 } from './dtos/request.dto';
-import { AuthResponseDto, GetMeResponseDto } from "./dtos/response.dto";
+import { AuthResponseDto, GetMeResponseDto } from './dtos/response.dto';
 import { plainToInstance } from 'class-transformer';
 import { generateAccessToken, generateRefreshToken } from './utils/jwt.utils';
 import * as bcrypt from 'bcrypt';
